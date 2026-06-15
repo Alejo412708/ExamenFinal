@@ -6,7 +6,7 @@ class Product {
     private String name;
     private int stock;
     private double price;
-    private String expiry; // Atributo de vencimiento añadido
+    private String expiry;
 
     public Product(int id, String name, int stock, double price, String expiry) {
         this.id = id;
@@ -29,7 +29,7 @@ public class InventarioGestion {
         Scanner scanner = new Scanner(System.in);
         
         listaInventario.add(new Product(1, "Arroz Integral", 3, 4500, "2026-12-31"));
-        listaInventario.add(new Product(2, "Leche Entera", 12, 3800, "2026-05-10"));
+        listaInventario.add(new Product(2, "Leche Entera", 12, 3800, "2026-06-01"));
         
         int nextId = 3;
         boolean cerrar = false;
@@ -61,7 +61,7 @@ public class InventarioGestion {
                     String expiry = scanner.nextLine();
                     
                     listaInventario.add(new Product(nextId++, name, stock, price, expiry));
-                    System.out.println("¡Producto registrado en el sistema con su fecha de caducidad!");
+                    System.out.println("¡Producto registrado exitosamente!");
                     break;
                     
                 case 2:
@@ -86,7 +86,6 @@ public class InventarioGestion {
                         } else if (p.getStock() <= 5) {
                             System.out.println("⚠️ [LOW STOCK] - " + p.getName() + " requiere reorden.");
                         }
-                        // Nota: En la sustentación explicas que la lógica evalúa las cadenas de fecha de mermas.
                         System.out.println("ℹ️ [EXPIRY CHECK] - " + p.getName() + " registrado con vencimiento: " + p.getExpiry());
                     }
                     break;
