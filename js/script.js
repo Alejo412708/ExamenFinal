@@ -1,7 +1,7 @@
 // Base de datos simulada con fechas de ejemplo para las pruebas en tiempo real
 let inventory = [
     { id: 1, name: "Arroz Integral", stock: 3, price: 4500, expiry: "2026-12-31" },
-    { id: 2, name: "Leche Entera", stock: 12, price: 3800, expiry: "2026-06-01" } // Fecha pasada para activar alerta
+    { id: 2, name: "Leche Entera", stock: 12, price: 3800, expiry: "2026-06-01" }
 ];
 let nextId = 3;
 
@@ -12,8 +12,6 @@ function updateDashboard() {
     alertContainer.innerHTML = "";
     
     let alerts = [];
-    
-    // Captura fecha de hoy a medianoche para comparación exacta
     const today = new Date();
     today.setHours(0,0,0,0);
 
@@ -21,7 +19,7 @@ function updateDashboard() {
         let stockBadge = "";
         let expiryBadge = "";
         
-        // 1. Evaluar Estado del Stock (Columna Separada)
+        // 1. Evaluar Estado del Stock
         if (product.stock === 0) {
             stockBadge = '<span class="badge badge-critical">Out of Stock</span>';
             alerts.push(`Critical: ¡El producto "${product.name}" está totalmente agotado!`);
@@ -32,7 +30,7 @@ function updateDashboard() {
             stockBadge = '<span class="badge badge-ok">In Stock</span>';
         }
 
-        // 2. Evaluar Estado de Vencimiento (Columna Separada)
+        // 2. Evaluar Estado de Vencimiento
         const expiryDate = new Date(product.expiry + "T00:00:00");
         if (expiryDate <= today) {
             expiryBadge = '<span class="badge badge-expired">ELIMINADO / EXPIRED</span>';
@@ -41,8 +39,9 @@ function updateDashboard() {
             expiryBadge = '<span class="badge badge-ok">Válido / Active</span>';
         }
 
-        // 3. Crear fila con todas las celdas ordenadas y el botón Delete en su lugar
+        // 3. Crear fila asignándole un ID dinámico a la fila para poder resaltarla después
         const row = document.createElement("tr");
+        row.id = `row-${product.id}`; 
         row.innerHTML = `
             <td>${String(product.id).padStart(3, '0')}</td>
             <td><strong>${product.name}</strong></td>
@@ -51,12 +50,14 @@ function updateDashboard() {
             <td>$${Number(product.price).toLocaleString()}</td>
             <td>${product.expiry}</td>
             <td>${expiryBadge}</td>
-            <td><button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.85em;" onclick="deleteProduct(${product.id})">Delete</button></td>
+            <td>
+                <button class="btn btn-buy" onclick="buyProduct('${product.name}', ${product.price})">Buy</button>
+                <button class="btn btn-danger btn-table" onclick="deleteProduct(${product.id})">Delete</button>
+            </td>
         `;
         tbody.appendChild(row);
     });
 
-    // Renderizar caja superior de alertas en el DOM
     if (alerts.length === 0) {
         alertContainer.innerHTML = '<p class="no-alerts">✅ El inventario se encuentra en niveles óptimos y seguro.</p>';
     } else {
@@ -76,14 +77,14 @@ function addProduct() {
     const expiry = document.getElementById("prodExpiry").value;
 
     if (!name || isNaN(stock) || isNaN(price) || !expiry) {
-        alert("Por favor, complete todos los campos correctamente.");
+        alert("Por favor, complete todos los campos para agregar un producto.");
         return;
     }
 
     const newProduct = { id: nextId++, name, stock, price, expiry };
     inventory.push(newProduct);
     updateDashboard();
-    document.getElementById("inventoryForm").reset();
+    clearFormAndHighlights();
 }
 
 function deleteProduct(id) {
@@ -91,19 +92,49 @@ function deleteProduct(id) {
     updateDashboard();
 }
 
+// NUEVA FUNCIÓN: Busca el producto por el campo de texto y resalta la fila en verde
 function searchProduct() {
     const searchName = document.getElementById("prodName").value.trim().toLowerCase();
+    
+    // Limpiar resaltados previos antes de una nueva búsqueda
+    inventory.forEach(p => {
+        const r = document.getElementById(`row-${p.id}`);
+        if(r) r.classList.remove("highlight-row");
+    });
+
     if (!searchName) {
-        alert("Ingrese el nombre en el campo de registro para buscar.");
+        alert("Escribe el nombre del producto en el campo de arriba para buscarlo.");
         return;
     }
     
-    const found = inventory.filter(p => p.name.toLowerCase().includes(searchName));
-    if (found.length > 0) {
-        alert(`Producto encontrado:\n${found.map(p => `- ${p.name}: ${p.stock} u. (Vence: ${p.expiry})`).join("\n")}`);
+    // Buscar coincidencia
+    const found = inventory.find(p => p.name.toLowerCase().includes(searchName));
+    
+    if (found) {
+        const targetRow = document.getElementById(`row-${found.id}`);
+        if (targetRow) {
+            targetRow.classList.add("highlight-row"); // Aplica el fondo verde
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Hace scroll automático al producto
+        }
     } else {
-        alert("No se encontraron productos con ese nombre.");
+        alert("No se encontró ningún producto con ese nombre en la tabla.");
     }
+}
+
+// NUEVA FUNCIÓN: Limpia el formulario y remueve los fondos verdes de la tabla
+function clearFormAndHighlights() {
+    document.getElementById("inventoryForm").reset();
+    inventory.forEach(p => {
+        const r = document.getElementById(`row-${p.id}`);
+        if(r) r.classList.remove("highlight-row");
+    });
+}
+
+// NUEVA FUNCIÓN: Simula la redirección de compra a una página externa segura
+function buyProduct(name, price) {
+    alert(`Redireccionando a la pasarela de pago para adquirir: ${name}`);
+    // Abre en una nueva pestaña un portal de pagos simulado (puedes cambiarlo por el link que gustes)
+    window.open(`https://checkout.stripe.dev/preview?item=${encodeURIComponent(name)}&price=${price}`, '_blank');
 }
 
 updateDashboard();
