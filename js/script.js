@@ -1,4 +1,3 @@
-// Base de datos simulada
 let inventory = [
     { id: 1, name: "Arroz Integral", stock: 3, price: 4500, expiry: "2026-12-31" },
     { id: 2, name: "Leche Entera", stock: 12, price: 3800, expiry: "2026-06-01" }
@@ -19,7 +18,6 @@ function updateDashboard() {
         let stockBadge = "";
         let expiryBadge = "";
         
-        // 1. Validar Stock
         if (product.stock === 0) {
             stockBadge = '<span class="badge badge-critical">Out of Stock</span>';
             alerts.push(`Critical: ¡El producto "${product.name}" está totalmente agotado!`);
@@ -30,7 +28,6 @@ function updateDashboard() {
             stockBadge = '<span class="badge badge-ok">In Stock</span>';
         }
 
-        // 2. Validar Vencimiento (Regla Eliminado)
         const expiryDate = new Date(product.expiry + "T00:00:00");
         if (expiryDate <= today) {
             expiryBadge = '<span class="badge badge-expired">ELIMINADO / EXPIRED</span>';
@@ -39,7 +36,6 @@ function updateDashboard() {
             expiryBadge = '<span class="badge badge-ok">Válido / Active</span>';
         }
 
-        // 3. Crear Fila con ID para el resaltado
         const row = document.createElement("tr");
         row.id = `row-${product.id}`; 
         row.innerHTML = `
@@ -51,7 +47,7 @@ function updateDashboard() {
             <td>${product.expiry}</td>
             <td>${expiryBadge}</td>
             <td>
-                <button class="btn btn-buy" onclick="buyProduct('${product.name}', ${product.price})">Buy</button>
+                <button class="btn btn-buy" onclick="redirectToPayment('${product.name}', ${product.price})">Buy</button>
                 <button class="btn btn-danger btn-table" onclick="deleteProduct(${product.id})">Delete</button>
             </td>
         `;
@@ -84,7 +80,7 @@ function addProduct() {
     const newProduct = { id: nextId++, name, stock, price, expiry };
     inventory.push(newProduct);
     updateDashboard();
-    clearFormAndHighlights();
+    document.getElementById("inventoryForm").reset();
 }
 
 function deleteProduct(id) {
@@ -92,16 +88,18 @@ function deleteProduct(id) {
     updateDashboard();
 }
 
+// Lógica del nuevo cuadro de búsqueda independiente
 function searchProduct() {
-    const searchName = document.getElementById("prodName").value.trim().toLowerCase();
+    const searchName = document.getElementById("searchFieldName").value.trim().toLowerCase();
     
+    // Limpiar resaltados previos
     inventory.forEach(p => {
         const r = document.getElementById(`row-${p.id}`);
         if(r) r.classList.remove("highlight-row");
     });
 
     if (!searchName) {
-        alert("Escribe el nombre del producto en el campo de arriba para buscarlo.");
+        alert("Escribe el nombre del producto en el nuevo cuadro de búsqueda.");
         return;
     }
     
@@ -118,17 +116,19 @@ function searchProduct() {
     }
 }
 
-function clearFormAndHighlights() {
-    document.getElementById("inventoryForm").reset();
+function clearHighlights() {
+    document.getElementById("searchFieldName").value = "";
     inventory.forEach(p => {
         const r = document.getElementById(`row-${p.id}`);
         if(r) r.classList.remove("highlight-row");
     });
 }
 
-function buyProduct(name, price) {
-    alert(`Redireccionando a la pasarela de pago para adquirir: ${name}`);
-    window.open(`https://checkout.stripe.dev/preview?item=${encodeURIComponent(name)}&price=${price}`, '_blank');
+// Redirección dinámica hacia tu otro repositorio de GitHub Pages
+function redirectToPayment(name, price) {
+    alert(`Procesando orden de compra para: ${name}. Redireccionando a la pasarela de pagos...`);
+    // OJO: Esta URL apunta directo al index.html de tu otro repositorio que configuraremos abajo
+    window.open(`https://alejo412708.github.io/Actividad-Integradora-CSS3/?item=${encodeURIComponent(name)}&price=${price}`, '_blank');
 }
 
 updateDashboard();
